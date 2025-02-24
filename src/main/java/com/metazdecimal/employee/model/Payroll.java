@@ -1,15 +1,13 @@
 package com.metazdecimal.employee.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 
-import java.time.LocalDate;
-
-@Entity
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Entity
 @Table(name = "Employee_Payroll")
 public class Payroll {
 
@@ -17,16 +15,12 @@ public class Payroll {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long payrollId;
 
+    private double salary;
+    private String salaryMonth;
+    private double pfContribution;
+
     @ManyToOne
     @JoinColumn(name = "employee_id", nullable = false)
+    @JsonBackReference
     private Employee employee;
-
-    @Column(nullable = false)
-    private Double salary;
-
-    @Column(nullable = false)
-    private LocalDate salaryMonth;
-
-    @Column(nullable = false)
-    private Double pfContribution;
 }

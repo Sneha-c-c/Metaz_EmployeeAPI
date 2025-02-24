@@ -6,7 +6,7 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class SkillDTO {
+public class SkillDto {
     private String skillName;
     private int experienceYears;
 }

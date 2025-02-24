@@ -33,37 +33,4 @@ public class EmployeeRequestDto {
 
     private List<SkillDto> skills;
     private List<PayrollDto> payroll;
-
-    @Getter
-    @Setter
-    public static class SkillDto {
-        @NotBlank(message = "Skill name is required")
-        private String skillName;
-
-        @NotNull(message = "Experience years is required")
-        private Integer experienceYears;
-    }
-
-    @Getter
-    @Setter
-    public static class PayrollDto {
-        @NotNull(message = "Salary is required")
-        private Double salary;
-
-        @NotNull(message = "Salary month is required")
-        @JsonFormat(pattern = "yyyy-MM-dd")
-        private LocalDate salaryMonth;
-
-        @NotNull(message = "PF contribution is required")
-        private Double pfContribution;
-    }
-
-    // DTO for updating payroll
-    @Getter
-    @Setter
-    public static class EmployeePayrollUpdateRequestDto {
-        @NotNull(message = "Payroll list cannot be empty")
-        private List<PayrollDto> payroll;
-    }
-
 }
