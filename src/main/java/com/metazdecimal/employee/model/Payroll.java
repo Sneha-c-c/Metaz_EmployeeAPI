@@ -1,5 +1,7 @@
 package com.metazdecimal.employee.model;
 
+import java.time.LocalDate;
+
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -16,7 +18,8 @@ public class Payroll {
     private Long payrollId;
 
     private double salary;
-    private String salaryMonth;
+    @Column(nullable = false)
+    private LocalDate salaryMonth;
     private double pfContribution;
 
     @ManyToOne

@@ -1,6 +1,7 @@
 package com.metazdecimal.employee.service;
 
 import com.metazdecimal.employee.dto.EmployeeRequestDto;
+import com.metazdecimal.employee.dto.PayrollDto;
 import com.metazdecimal.employee.dto.SkillDto;
 import com.metazdecimal.employee.model.Employee;
 import com.metazdecimal.employee.model.Skill;
@@ -11,10 +12,11 @@ import com.metazdecimal.employee.repository.SkillRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import java.time.format.DateTimeFormatter;
 
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.Optional;
@@ -54,13 +56,13 @@ public class EmployeeService {
         }).collect(Collectors.toList());
 
         employee.setSkills(skills);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        
 
         // Map Payroll
         List<Payroll> payrolls = requestDto.getPayroll().stream().map(payrollDto -> {
             Payroll payroll = new Payroll();
             payroll.setSalary(payrollDto.getSalary());
-            payroll.setSalaryMonth(payrollDto.getSalaryMonth().format(formatter)); // Convert LocalDate to String
+            payroll.setSalaryMonth(payrollDto.getSalaryMonth()); // Convert LocalDate to String
             payroll.setPfContribution(payrollDto.getPfContribution());
             payroll.setEmployee(employee);
             return payroll;
@@ -92,5 +94,107 @@ public class EmployeeService {
     public List<Employee> getAllEmployees() {
         return employeeRepository.findAll();
     }
+
+    @Transactional
+    public String updateEmployeeSkills(Long employeeId, List<SkillDto> skillDtos) {
+        Optional<Employee> optionalEmployee = employeeRepository.findById(employeeId);
+
+        if (optionalEmployee.isEmpty()) {
+            return "Employee not found";
+        }
+
+        Employee employee = optionalEmployee.get();
+        List<Skill> existingSkills = employee.getSkills();
+
+        for (SkillDto skillDto : skillDtos) {
+            Optional<Skill> existingSkill = existingSkills.stream()
+                    .filter(skill -> skill.getSkillName().equalsIgnoreCase(skillDto.getSkillName()))
+                    .findFirst();
+
+            if (existingSkill.isPresent()) {
+                // Update existing skill
+                Skill skillToUpdate = existingSkill.get();
+                skillToUpdate.setExperienceYears(skillDto.getExperienceYears());
+                skillRepository.save(skillToUpdate);
+            } else {
+                // Add new skill if it doesn't exist
+                Skill newSkill = new Skill();
+                newSkill.setSkillName(skillDto.getSkillName());
+                newSkill.setExperienceYears(skillDto.getExperienceYears());
+                newSkill.setEmployee(employee);
+                skillRepository.save(newSkill);
+            }
+        }
+
+        return "Employee skills updated successfully";
+    }  
+
+    
+    @Transactional
+    public String updateEmployeePayroll(Long employeeId, List<PayrollDto> payrollDtos) {
+        Optional<Employee> optionalEmployee = employeeRepository.findById(employeeId);
+
+        if (optionalEmployee.isEmpty()) {
+            return "Employee not found";
+        }
+
+        Employee employee = optionalEmployee.get();
+        List<Payroll> existingPayrolls = employee.getPayroll();
+
+        for (PayrollDto payrollDto : payrollDtos) {
+            Optional<Payroll> existingPayroll = existingPayrolls.stream()
+                    .filter(payroll -> payroll.getSalaryMonth().equals(payrollDto.getSalaryMonth())) // Compare
+                                                                                                     // LocalDate
+                                                                                                     // directly
+                    .findFirst();
+
+            if (existingPayroll.isPresent()) {
+                // Update existing payroll details
+                Payroll payrollToUpdate = existingPayroll.get();
+                payrollToUpdate.setSalary(payrollDto.getSalary());
+                payrollToUpdate.setPfContribution(payrollDto.getPfContribution());
+            } else {
+                // Add new payroll entry
+                Payroll newPayroll = new Payroll();
+                newPayroll.setSalary(payrollDto.getSalary());
+                newPayroll.setSalaryMonth(payrollDto.getSalaryMonth()); // Ensure LocalDate
+                newPayroll.setPfContribution(payrollDto.getPfContribution());
+                newPayroll.setEmployee(employee);
+                existingPayrolls.add(newPayroll);
+            }
+        }
+
+        employeeRepository.save(employee); // Save changes
+
+        return "Employee payroll updated successfully";
+    }
+    
+    @Transactional
+    public Map<String, Object> getEmployeePayroll(Long employeeId) {
+        Optional<Employee> optionalEmployee = employeeRepository.findById(employeeId);
+
+        if (optionalEmployee.isEmpty()) {
+            throw new RuntimeException("Employee not found");
+        }
+
+        Employee employee = optionalEmployee.get();
+        List<PayrollDto> payrollDtos = employee.getPayroll().stream()
+                .map(payroll -> {
+                    PayrollDto dto = new PayrollDto();
+                    dto.setSalary(payroll.getSalary());
+                    dto.setSalaryMonth(payroll.getSalaryMonth()); // Ensure salaryMonth is LocalDate
+                    dto.setPfContribution(payroll.getPfContribution());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("employeeId", employee.getEmployeeId());
+        response.put("payroll", payrollDtos);
+
+        return response;
+    }
+    
+
 
 }

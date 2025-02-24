@@ -4,10 +4,13 @@ import com.metazdecimal.employee.dto.EmployeeRequestDto;
 import com.metazdecimal.employee.model.Employee;
 import com.metazdecimal.employee.service.EmployeeService;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 @RestController
@@ -59,6 +62,41 @@ public class EmployeeController {
             return ResponseEntity.ok().body(employee);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PutMapping("/{employeeId}/skills")
+    public ResponseEntity<?> updateEmployeeSkills(@PathVariable Long employeeId,
+            @RequestBody EmployeeRequestDto requestDto) {
+        String message = employeeService.updateEmployeeSkills(employeeId, requestDto.getSkills());
+
+        if (message.equals("Employee not found")) {
+            return ResponseEntity.badRequest().body("{\"message\": \"Employee not found\"}");
+        }
+
+        return ResponseEntity.ok("{\"message\": \"" + message + "\"}");
+    }
+
+    @PutMapping("/{employeeId}/payroll")
+    public ResponseEntity<?> updateEmployeePayroll(@PathVariable Long employeeId,
+            @RequestBody EmployeeRequestDto requestDto) {
+        String message = employeeService.updateEmployeePayroll(employeeId, requestDto.getPayroll());
+
+        if (message.equals("Employee not found")) {
+            return ResponseEntity.badRequest().body("{\"message\": \"Employee not found\"}");
+        }
+
+        return ResponseEntity.ok("{\"message\": \"" + message + "\"}");
+    }
+
+    @GetMapping("/{employeeId}/payroll")
+    public ResponseEntity<?> getEmployeePayroll(@PathVariable Long employeeId) {
+        try {
+            Map<String, Object> payrollData = employeeService.getEmployeePayroll(employeeId);
+            return ResponseEntity.ok(payrollData);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Collections.singletonMap("error", e.getMessage()));
         }
     }
 
